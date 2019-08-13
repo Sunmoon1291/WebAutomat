@@ -1,0 +1,77 @@
+﻿@model WebAutomat.DataAccess.Entity.Drink
+
+@{
+    ViewBag.Title = "Редактирование напитка";
+}
+
+
+<div class="container">
+    <div class="panel-heading">
+        @if (@Model.ID == 0)
+        {
+            <h3>Добавление напитка</h3>
+        }
+        else
+        {
+            <h3>Редактирование напитка «@Model.Name»</h3>
+        }
+    </div>
+
+    @using (Html.BeginForm("Edit", "Admin",
+                FormMethod.Post, new { enctype = "multipart/form-data" }))
+    {
+        <div class="panel-body">
+            @Html.HiddenFor(m => m.ID)
+            @foreach (var property in ViewData.ModelMetadata.Properties) //Цикл по полям модели напитка
+            {
+                switch (property.PropertyName)
+                {
+                    case "ID":
+                    case "ImageData":
+                    case "ImageType":
+                        break;
+                    default:
+                        <div class="form-group">
+                            <label>@property.DisplayName</label>
+                            @Html.TextBox(property.PropertyName, null, new { @class = "form-control" })
+                            @Html.ValidationMessage(property.PropertyName)
+                        </div>
+                        break;
+                }
+            }
+            @Html.HiddenFor(m => m.ImageData)
+            @Html.HiddenFor(m => m.ImageType)
+            <div class="form-group">
+                <div style="position:relative;">
+                    <label>Картинка</label>
+                    <a class='btn btn-link' href='javascript:;'>
+                        Выберите файл...
+                        <input type="file" name="Image" size="40"
+                                style="position:absolute;z-index:2;top:0;
+                            left:0;filter: alpha(opacity=0); opacity:0;
+                            background-color:transparent;color:transparent;"
+                                onchange='$("#upload-file-info").html($(this).val());'>
+                    </a>
+                    <span class='label label-info' id="upload-file-info"></span>
+                </div>
+                @if (Model.ImageData == null)
+                {
+                    <div class="form-control-static">Нет картинки</div>
+                }
+                else
+                {
+                    <img class="img-thumbnail" width="150" height="150"
+                            src="@Url.Action("GetImage", "Admin",
+                    new { Model.ID })" />
+                }
+            </div>
+        </div>
+        <div class="panel-footer">
+            <input type="submit" value="Сохранить" class="btn btn-success" />
+            @Html.ActionLink("Отменить изменения и вернуться к списку", "Index", null, new
+                {
+                    @class = "btn btn-primary"
+                })
+        </div>
+    }
+</div>

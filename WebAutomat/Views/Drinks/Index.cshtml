@@ -1,0 +1,130 @@
+﻿@model WebAutomat.Models.AutomatViewModel
+
+@{
+    ViewBag.Title = "Настройки автомата";
+    WebAutomat.Models.ChangeViewModel Change;
+    if (TempData["message"] != null) //Если пользователь запросил сдачу
+    {
+        Change = (WebAutomat.Models.ChangeViewModel) TempData["message"];
+    }
+    else
+    {
+        Change = null;
+    }
+
+}
+
+<div class="col-md-3">
+    <div class="panel-heading">
+        <h5 class="text-center">Монеты</h5>
+    </div>
+    <div class="panel-body">
+        <div class="container">
+            @foreach (var item in Model.Coins)
+            {
+                using (Html.BeginForm("AddCoin", "Drinks"))
+                {
+                    @Html.Hidden("CoinId", item.ID)
+                    <div class="btn-group-vertical col-md-12">
+                        @if (item.Block) //Если монета заблокирована, то блокируется кнопка приема монет
+                        {
+                            <button type="submit" disabled class="btn btn-primary">@item.Name</button>
+                        }
+                        else
+                        {                           
+                            <button type="submit" class="btn btn-primary">@item.Name</button>
+                        }
+                    </div>
+                }
+            }
+            <label class="alert">Итого: @Model.Total</label>
+        </div>
+        <div class="container">
+            @using (Html.BeginForm("GetChange", "Drinks"))
+            {
+                <div class="btn-group-vertical col-md-12">
+
+                    @if (Model.Total == 0) //Если внесенная сумма равна 0, то блокируется кнопка сдачи
+                    {
+                        <button type="submit" disabled class="btn btn-success">Забрать сдачу</button>
+                    }
+                    else
+                    {
+                        <button type="submit" class="btn btn-success">Забрать сдачу</button>
+                    }
+                </div>
+            }
+            @if (Change != null) //Если пользователь запросил сдачу
+            {
+                <div class="alert">
+                    @if (Change.Status == 0)
+                    {
+                        <p>Недостаточно монет для сдачи</p>
+                    }
+                    @if (Change.Wallet.Count > 0)
+                    {
+                        <p>Сдача</p>
+                        <ui>
+                            @foreach (var item in Change.Wallet)
+                            {
+                                <li>@item.Key.Trim() - @item.Value</li>
+                            }
+                        </ui>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>
+<div class="col-md-9">
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            <h5 class="text-center">Напитки</h5>
+        </div>
+        <div class="panel-body">
+            <table class="table">
+                <tr>
+                    <th width="33%"></th>
+                    <th width="33%"></th>
+                    <th width="33%"></th>
+                </tr>
+                <!-- Напитки выводятся в виде таблицы с тремя столбцами -->
+                @for (int i = 0; i < Math.Ceiling((double)Model.Drinks.Count() / 3); i++) //Определение номера строки
+                {
+                    <tr>
+                        @for (int j = 3 * i; j < 3 * i + 3; j++) //Заполнение столбцов
+                        {
+                            if (j < Model.Drinks.Count())
+                            {
+                                <td>
+                                    <div class="row">
+                                        <div>
+                                            <!-- Если недостаточно средств или напиток заночился, то картинка с напитком блокируется -->
+                                            @if ((Model.Drinks.ElementAt(j).Cost <= Model.Total) && @Model.Drinks.ElementAt(j).Count > 0)
+                                            {
+                                                <a href="@Url.Action("GetDrink", "Drinks", new { DrinkId = Model.Drinks.ElementAt(j).ID})">
+                                                    <img class="img-thumbnail" width="110" height="110"
+                                                         src="@Url.Action("GetImage", "Drinks", new { Model.Drinks.ElementAt(j).ID })" />
+                                                </a>
+                                            }
+                                            else
+                                            {
+                                                <img class="img-thumbnail" style="background-color: red;" width="110" height="110"
+                                                     src="@Url.Action("GetImage", "Drinks", new { Model.Drinks.ElementAt(j).ID })" />
+                                            }
+                                        </div>
+                                        <div>
+                                            <label class="lead">@Model.Drinks.ElementAt(j).Name</label><br>
+                                            <label class="lead">Цена: @Model.Drinks.ElementAt(j).Cost</label><br>
+                                            <label class="lead">Кол-во: @Model.Drinks.ElementAt(j).Count</label>
+                                        </div>
+                                    </div>
+                                </td>
+                            }
+                        }
+                    </tr>
+                }
+            </table>
+        </div>
+    </div>
+</div>
